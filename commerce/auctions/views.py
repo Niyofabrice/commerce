@@ -10,7 +10,7 @@ from .models import *
 
 
 def index(request):
-    listings = Listing.objects.all()
+    listings = Listing.objects.filter(closed=False)
     context = {
         "listings": listings,
     }
