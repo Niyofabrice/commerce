@@ -121,11 +121,11 @@ def bid(request, listing_id):
     if request.method == "POST":
         listing = Listing.objects.get(pk=listing_id)
         user = request.user
-        amount = request.POST["amount"]
+        bid_amount = request.POST["bid"]
         new_bid = Bid(
             listing=listing,
             user=user,
-            amount=amount
+            amount=bid_amount
         )
         new_bid.save()
         return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
