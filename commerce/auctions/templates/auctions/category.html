@@ -1,18 +1,22 @@
-{% extends "auctions/layout.html" %}
+{% extends 'auctions/layout.html' %}
 
 {% block body %}
-    <h2>Active Listings</h2>
+    <h2>{{ category.name}}</h2>
 
-    {% for listing in listings %}
+    {% if listings %}
+        {% for listing in listings %}
         <div class="card">
             <div class="card-body">
                 <img src="{{ listing.image_url }}" alt="Listing Image" style="width: 100px; height: 100px;">
                 <h5 class="card-title">{{ listing.title }}</h5>
                 <p class="card-text">{{ listing.description }}</p>
-                <p class="card-text">Price: ${{ listing.starting_bid }}</p>
+                <p class="card-text">Price: ${{ listing.price }}</p>
                 <p class="card-text">Category: {{ listing.category }}</p>
                 <a href="{% url 'listing' listing_id=listing.id %}" class="btn btn-primary">View Listing</a>
             </div>
         </div>
-    {% endfor %}
+        {% endfor %}
+    {% else %}
+        <p>No listings in this category.</p>
+    {% endif %}
 {% endblock %}

@@ -23,19 +23,7 @@
             {% for category in categories %}
                 <option value="{{category.name}}">{{category}}</option>
             {% endfor %}
-        </select>
-        {% if user.is_authenticated %}
-            <div>
-                <form method="POST" action="{% url 'create_category' %}">
-                    {% csrf_token %}
-                    <label for="category">New category:</label>
-                    <input type="text" name="category" required>
-                    <button type="submit">Add category</button>
-                </form>
-            </div>
-        {% endif %}
-        <br><br>
-        
+        </select><br><br>
         <button type="submit" class="btn btn-success p-2">Create Listing</button>
     </form>
 

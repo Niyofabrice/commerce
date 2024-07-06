@@ -12,7 +12,7 @@ from .models import *
 def index(request):
     listings = Listing.objects.all()
     context = {
-        "listings": listings
+        "listings": listings,
     }
     return render(request, "auctions/index.html", context)
 
@@ -85,7 +85,7 @@ def create_listing(request):
             starting_bid=starting_bid,
             category=Category.objects.get(name=category),
             image_url=image_url,
-            user=user
+            seller=user
         )
         new_listing.save()
         return HttpResponseRedirect(reverse("index"))
@@ -117,6 +117,22 @@ def listing(request, listing_id):
     }
     return render(request, "auctions/listing.html", context)
 
+
+def add_comment(request, listing_id):
+    if request.method == "POST":
+        user = request.user
+        listing = Listing.objects.get(pk=listing_id)
+        comment = request.POST["comment"]
+        new_comment = Comment(
+            author=user,
+            listing=listing,
+            comment=comment
+        )
+        new_comment.save()
+        return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+
+
+
 def bid(request, listing_id):
     if request.method == "POST":
         listing = Listing.objects.get(pk=listing_id)
@@ -128,4 +144,56 @@ def bid(request, listing_id):
             amount=bid_amount
         )
         new_bid.save()
+        return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+    
+
+def add_to_watchlist(request, listing_id):
+    if request.method == "POST":
+        listing = Listing.objects.get(pk=listing_id)
+        user = request.user
+        watchlist, created = Watchlist.objects.get_or_create(user=user)
+        watchlist.listing.add(listing)
+        return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+    
+def watchlist(request):
+    user = request.user
+    try:
+        watchlist = Watchlist.objects.get(user=user)
+        listings = watchlist.listing.all()
+    except Watchlist.DoesNotExist:
+        listings = []  # If the watchlist does not exist, set listings to an empty list
+    context = {
+        "watchlist": listings
+    }
+    return render(request, "auctions/watchlist.html", context)
+
+
+def categories(request):
+    categories = Category.objects.all()
+    context = {
+        "categories": categories
+    }
+    return render(request, "auctions/categories.html", context)
+
+def category(request, category_id):
+    category = Category.objects.get(pk=category_id)
+    listings = category.listings.all()
+    context = {
+        "category": category,
+        "listings": listings
+    }
+    return render(request, "auctions/category.html", context)
+
+def close_auction(request, listing_id):
+    if request.method == "POST":
+        listing = Listing.objects.get(pk=listing_id)
+        top_bid = listing.bids.order_by("amount").first()
+        user = top_bid.user
+        winner = Winner(
+            listing=listing,
+            user=user
+        )
+        winner.save()
+        listing.closed = True
+        listing.save()
         return HttpResponseRedirect(reverse("listing", args=(listing_id,)))

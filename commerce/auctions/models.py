@@ -7,7 +7,7 @@ class User(AbstractUser):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=64, default=None)
 
     def __str__(self):
         return f"{self.name}"
@@ -19,6 +19,7 @@ class Listing(models.Model):
     image_url = models.URLField(blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="listings")
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings", default=None)
+    closed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.title}"
@@ -34,15 +35,15 @@ class Bid(models.Model):
     
 class Comment(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="comments")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
-    comment = models.TextField()
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    comment = models.TextField(max_length=None)
 
     def __str__(self):
         return f"{self.comment}"
 
 class Watchlist(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="watchlist")
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="watchlist")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="watchlist")
+    listing = models.ManyToManyField(Listing, related_name="watchlist")
 
     def __str__(self):
         return f"{self.user} - {self.listing}"
@@ -54,28 +55,6 @@ class Winner(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.listing}"
-
-class Closed(models.Model):
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="closed")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="closed")
-
-    def __str__(self):
-        return f"{self.user} - {self.listing}"
     
-    
-class CategoryListing(models.Model):
-    category_ref = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="category_listings")
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="category_listings")
 
-    def __str__(self):
-        return f"{self.category} - {self.listing}"
     
-class Auction(models.Model):
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="auction")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="auction")
-    bid = models.DecimalField(max_digits=10, decimal_places=2)
-    winner = models.ForeignKey(Winner, on_delete=models.CASCADE, related_name="auction")
-    closed = models.ForeignKey(Closed, on_delete=models.CASCADE, related_name="auction")
-
-    def __str__(self):
-        return f"{self.listing} - {self.bid} - {self.winner} - {self.closed}"

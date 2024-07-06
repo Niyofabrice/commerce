@@ -11,4 +11,10 @@ urlpatterns = [
     path("create-category", views.create_category, name="create_category"),
     path("listing/<int:listing_id>/", views.listing, name="listing"),
     path("bid/<int:listing_id>/", views.bid, name="bid"),
+    path("add-to-watchlist/<int:listing_id>", views.add_to_watchlist, name="add_to_watchlist"),
+    path("watchlist", views.watchlist, name="watchlist"),
+    path("categories/", views.categories, name="categories"),
+    path("single_category/<int:category_id>", views.category, name="single_category"),
+    path("close/<int:listing_id>", views.close_auction, name="close_auction"),
+    path("comment/<int:listing_id>", views.add_comment, name="add_comment"),
 ]
