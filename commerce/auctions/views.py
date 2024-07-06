@@ -10,8 +10,9 @@ from .models import *
 
 
 def index(request):
+    listings = Listing.objects.all()
     context = {
-        "listings": Listing.objects.all()
+        "listings": listings
     }
     return render(request, "auctions/index.html", context)
 
@@ -92,3 +93,39 @@ def create_listing(request):
         "categories": Category.objects.all()
     }
     return render(request, "auctions/create_listing.html", context)
+
+
+@login_required(login_url="login")
+def create_category(request):
+    if request.method == "POST":
+        name = request.POST["name"]
+        new_category = Category(name=name)
+        new_category.save()
+        return HttpResponseRedirect(reverse("create_listing"))
+    return render(request, "auctions/create_category.html")
+
+def listing(request, listing_id):
+    listing = Listing.objects.get(pk=listing_id)
+    bids = listing.bids.all()
+    top_bid = listing.bids.order_by("amount").first()
+    comments = listing.comments.all()
+    context = {
+        "listing": listing,
+        "comments": comments,
+        "total_bids": bids.count(),
+        "top_bid": top_bid,
+    }
+    return render(request, "auctions/listing.html", context)
+
+def bid(request, listing_id):
+    if request.method == "POST":
+        listing = Listing.objects.get(pk=listing_id)
+        user = request.user
+        amount = request.POST["amount"]
+        new_bid = Bid(
+            listing=listing,
+            user=user,
+            amount=amount
+        )
+        new_bid.save()
+        return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
