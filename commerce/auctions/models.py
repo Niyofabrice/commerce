@@ -10,7 +10,7 @@ class Category(models.Model):
     name = models.CharField(max_length=64)
 
     def __str__(self):
-        return f"{self.category}"
+        return f"{self.name}"
 
 class Listing(models.Model):
     title = models.CharField(max_length=64)
