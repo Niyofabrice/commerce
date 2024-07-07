@@ -108,12 +108,14 @@ def listing(request, listing_id):
     listing = Listing.objects.get(pk=listing_id)
     bids = listing.bids.all()
     top_bid = listing.bids.order_by("amount").first()
-    comments = listing.comments.all()
+    comments = Comment.objects.filter(listing=listing)
+    winners = Winner.objects.filter(listing=listing)
     context = {
         "listing": listing,
         "comments": comments,
         "total_bids": bids.count(),
         "top_bid": top_bid,
+        "winners": winners
     }
     return render(request, "auctions/listing.html", context)
 

@@ -53,7 +53,7 @@
                         {% for comment in comments %}
                             <div class="comment">
                                 <p>{{ comment.author }} said:</p>
-                                <p>{{ comment }}</p>
+                                <p>{{ comment.comment }}</p>
                                 <hr>
                             </div>
                         {% empty %}
@@ -63,9 +63,9 @@
                 </div>
                 {% if user.is_authenticated and listing.closed == True %}
                     <p>This listing is closed.</p>
-                    {% if user.winner %}
-                        <p>Winner: {{ listing.winner.user }}</p>
-                    {% endif %}
+                    {% for winner in winners %}
+                        <p>Winner: {{ winner.user }}</p>
+                    {% endfor %}
                 {% elif user == listing.seller %}
                     <div class="close-auction-form">
                         <form method="POST" action="{% url 'close_auction' listing_id=listing.id %}">
