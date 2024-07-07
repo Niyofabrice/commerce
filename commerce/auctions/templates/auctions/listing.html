@@ -1,6 +1,13 @@
 {% extends 'auctions/layout.html' %}
 
 {% block body %}
+    {% if messages %}
+        {%for message in messages %}
+            <div class="alert alert-danger" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
     <div class="card">
         <div class="row">
             <div class="col-md-4">
@@ -10,10 +17,11 @@
                 <div class="card-body">
                     <h1>{{ listing.title }}</h1>
                     <p class="mt-3">{{ listing.description }}</p>
+                    <p class="mt-5">Starting price: ${{ listing.starting_bid }}</p>
                     {% if top_bid %}
-                        <p class="mt-5">Price: ${{ top_bid }}</p>
+                        <p class="mt-3">Top bid: ${{ top_bid }}</p>
                     {% else %}
-                        <p class="mt-5">Price: ${{ listing.starting_bid }}</p>
+                        <p class="mt-3">Price: ${{ listing.starting_bid }}</p>
                     {% endif %}
                     <p>Category: {{ listing.category }}</p>
                     <p>Seller: {{ listing.seller }}</p>
@@ -28,12 +36,21 @@
                                 <button type="submit" class="btn btn-primary">Place Bid</button>
                             </form>
                         </div>
-                        <div class="watchlist-form">
-                            <form method="POST" action="{% url 'add_to_watchlist' listing_id=listing.id %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-primary">Add to Watchlist</button>
-                            </form>
-                        </div>
+                        {% if watchlist.exists %}
+                            <div class="watchlist-form">
+                                <form method="POST" action="{% url 'remove_from_watchlist' listing_id=listing.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Remove from Watchlist</button>
+                                </form>
+                            </div>
+                        {% else%}
+                            <div class="watchlist-form">
+                                <form method="POST" action="{% url 'add_to_watchlist' listing_id=listing.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary">Add to Watchlist</button>
+                                </form>
+                            </div>
+                        {% endif %}
                     {% endif %}
                     <div class="comments-section my-5">
                         <h2>Comments</h2>
@@ -63,9 +80,9 @@
                 </div>
                 {% if user.is_authenticated and listing.closed == True %}
                     <p>This listing is closed.</p>
-                    {% for winner in winners %}
+                    {% if winner %}
                         <p>Winner: {{ winner.user }}</p>
-                    {% endfor %}
+                    {% endif %}
                 {% elif user == listing.seller %}
                     <div class="close-auction-form">
                         <form method="POST" action="{% url 'close_auction' listing_id=listing.id %}">

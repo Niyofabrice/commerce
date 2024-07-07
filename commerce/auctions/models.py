@@ -46,7 +46,7 @@ class Watchlist(models.Model):
     listing = models.ManyToManyField(Listing, related_name="watchlist")
 
     def __str__(self):
-        return f"{self.user} - {self.listing}"
+        return f"{self.user}'s watchlist"
 
 
 class Winner(models.Model):
@@ -54,7 +54,7 @@ class Winner(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="winner")
 
     def __str__(self):
-        return f"{self.user} - {self.listing}"
+        return f"{self.user} won {self.listing}"
     
 
     

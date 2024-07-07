@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
@@ -105,17 +106,35 @@ def create_category(request):
     return render(request, "auctions/create_category.html")
 
 def listing(request, listing_id):
+    winner = None
+    comments = None
+    watchlist = None
+
     listing = Listing.objects.get(pk=listing_id)
     bids = listing.bids.all()
-    top_bid = listing.bids.order_by("amount").first()
-    comments = Comment.objects.filter(listing=listing)
-    winners = Winner.objects.filter(listing=listing)
+    top_bid = listing.bids.order_by("-amount").first()
+    try:
+        comments = Comment.objects.filter(listing=listing)
+    except Comment.DoesNotExist:
+        comments = None
+    
+    try:
+        winner = Winner.objects.filter(listing=listing).first()
+    except Winner.DoesNotExist:
+        winner = None
+    
+    try:
+        watchlist = listing.watchlist.all().filter(user=request.user)
+    except Watchlist.DoesNotExist:
+        watchlist = None
+
     context = {
         "listing": listing,
         "comments": comments,
         "total_bids": bids.count(),
         "top_bid": top_bid,
-        "winners": winners
+        "winner": winner,
+        "watchlist": watchlist
     }
     return render(request, "auctions/listing.html", context)
 
@@ -139,14 +158,23 @@ def bid(request, listing_id):
     if request.method == "POST":
         listing = Listing.objects.get(pk=listing_id)
         user = request.user
-        bid_amount = request.POST["bid"]
+        bid_amount = float(request.POST["bid"])
+        bids = Bid.objects.all()
+        current_top_bid = listing.bids.order_by("-amount").first()
+        if bids:
+            if bid_amount <= listing.starting_bid or bid_amount <= current_top_bid.amount:
+                messages.error(request, "Your bid is lower than the starting bid or the current highest bid")
+                return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+        if bid_amount <= listing.starting_bid:
+            messages.error(request, "Your bid is lower than the starting bid")
+            return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
         new_bid = Bid(
             listing=listing,
             user=user,
             amount=bid_amount
         )
         new_bid.save()
-        return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+    return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
     
 
 def add_to_watchlist(request, listing_id):
@@ -156,7 +184,17 @@ def add_to_watchlist(request, listing_id):
         watchlist, created = Watchlist.objects.get_or_create(user=user)
         watchlist.listing.add(listing)
         return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
-    
+
+def remove_from_watchlist(request, listing_id):
+    if request.method == "POST":
+        listing = Listing.objects.get(pk=listing_id)
+        user = request.user
+        watchlist = Watchlist.objects.get(user=user)
+        watchlist.listing.remove(listing)
+        return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+
+
+  
 def watchlist(request):
     user = request.user
     try:
@@ -189,13 +227,14 @@ def category(request, category_id):
 def close_auction(request, listing_id):
     if request.method == "POST":
         listing = Listing.objects.get(pk=listing_id)
-        top_bid = listing.bids.order_by("amount").first()
-        user = top_bid.user
-        winner = Winner(
-            listing=listing,
-            user=user
-        )
-        winner.save()
+        top_bid = listing.bids.order_by("-amount").first()
+        if top_bid:
+            user = top_bid.user
+            winner = Winner(
+                listing=listing,
+                user=user
+            )
+            winner.save()
         listing.closed = True
         listing.save()
         return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
