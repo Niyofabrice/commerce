@@ -10,7 +10,7 @@
                 <img src="{{ listing.image_url }}" alt="Listing Image" style="width: 100px; height: 100px;">
                 <h5 class="card-title">{{ listing.title }}</h5>
                 <p class="card-text">{{ listing.description }}</p>
-                <p class="card-text">Price: ${{ listing.price }}</p>
+                <p class="card-text">Price: ${{ listing.starting_bid }}</p>
                 <p class="card-text">Category: {{ listing.category }}</p>
                 <a href="{% url 'listing' listing_id=listing.id %}" class="btn btn-primary">View Listing</a>
             </div>

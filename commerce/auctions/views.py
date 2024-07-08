@@ -40,6 +40,7 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
+    messages.success(request, "Logged out")
     return HttpResponseRedirect(reverse("index"))
 
 
@@ -65,8 +66,10 @@ def register(request):
                 "message": "Username already taken."
             })
         login(request, user)
+        messages.success(request, "Account created successfully!")
         return HttpResponseRedirect(reverse("index"))
     else:
+        messages.error(request, "An error occurred. Please try again.")
         return render(request, "auctions/register.html")
 
 
@@ -89,10 +92,12 @@ def create_listing(request):
             seller=user
         )
         new_listing.save()
+        messages.success(request, "Listing created successfully!")
         return HttpResponseRedirect(reverse("index"))
     context = {
         "categories": Category.objects.all()
     }
+    messages.error(request, "An error occurred. Please try again.")
     return render(request, "auctions/create_listing.html", context)
 
 
@@ -150,6 +155,7 @@ def add_comment(request, listing_id):
             comment=comment
         )
         new_comment.save()
+        messages.success(request, "Comment posted successfully!")
         return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
 
 
@@ -159,10 +165,11 @@ def bid(request, listing_id):
         listing = Listing.objects.get(pk=listing_id)
         user = request.user
         bid_amount = float(request.POST["bid"])
-        bids = Bid.objects.all()
-        current_top_bid = listing.bids.order_by("-amount").first()
+        bids = Bid.objects.filter(listing=listing)
+        print(bids)
         if bids:
-            if bid_amount <= listing.starting_bid or bid_amount <= current_top_bid.amount:
+            current_top_bid = listing.bids.order_by("-amount").first()
+            if bid_amount <= listing.starting_bid or bid_amount <= current_top_bid:
                 messages.error(request, "Your bid is lower than the starting bid or the current highest bid")
                 return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
         if bid_amount <= listing.starting_bid:
@@ -174,6 +181,7 @@ def bid(request, listing_id):
             amount=bid_amount
         )
         new_bid.save()
+        messages.success(request, "Your bid has been successfully placed!")
     return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
     
 

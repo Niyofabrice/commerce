@@ -2,6 +2,19 @@
 
 {% block body %}
     <h2>Active Listings</h2>
+    {% if messages %}
+        {%for message in messages %}
+            {% if message.tags == "error" %}
+                <div class="alert alert-danger" role="alert">
+                    {{ message }}
+                </div>
+            {% elif message.tags == "success" %}
+                <div class="alert alert-success" role="alert">
+                    {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
 
     {% for listing in listings %}
         {% if not listing.closed %}
